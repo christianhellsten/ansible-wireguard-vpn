@@ -61,17 +61,17 @@ Solution: Check that the peer server's IP address is in the range defined by All
 
 - all other issues
 
-Verify that all the peers' private and public keys are correct:
+Verify that all the peers' private and public keys are correct, check IPs and ports are accessible:
 
 ```bash
 # wg
 interface: wg0
   public key: <check this>
   private key: (hidden) <check this>
-  listening port: 50111
+  listening port: 50111 <check this>
 
 peer: <check this>
-  endpoint: 212.xxx
+  endpoint: 212.xxx <check this>
   allowed ips: 192.168.0.0/16
   transfer: 0 B received, 4.34 KiB sent
 ```
