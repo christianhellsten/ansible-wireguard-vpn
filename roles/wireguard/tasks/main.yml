@@ -1,0 +1,53 @@
+---
+#
+
+- name: Enable net.ipv4.ip_forward
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    reload: yes
+    state: present
+
+- name: Enable net.ipv4.conf.all.proxy_arp
+  sysctl:
+    name: net.ipv4.conf.all.proxy_arp
+    value: 1
+    reload: yes
+    state: present
+
+- name: Generate the wireguard configuration
+  template:
+    src: wireguard.conf.j2
+    dest: "{{ wireguard_path }}/wg0.conf"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: Enable reload-module-on-update to upgrade WireGuard without user confirmation
+  file:
+    path: "{{ wireguard_path }}/.reload-module-on-update"
+    state: touch
+
+- name: Install UFW
+  apt:
+    package:
+     - ufw
+   when: firewall == 'ufw'
+
+- name: Allow WireGuard port in UFW
+  ufw:
+    to_port: "{{ wireguard_port }}"
+    proto: "udp"
+    rule: "allow"
+  when: firewall == 'ufw'
+
+- name: Reload WireGuard
+  shell: "wg-quick down wg0 && wg-quick up wg0"
+  ignore_errors: yes
+
+- name: Enable the WireGuard service
+  systemd:
+    name: wg-quick@wg0.service
+    enabled: yes
+    state: started
+  ignore_errors: yes

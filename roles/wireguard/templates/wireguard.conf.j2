@@ -1,0 +1,16 @@
+# {{ inventory_hostname }}
+[Interface]
+Address    = {{ vpn_ip }}/24
+ListenPort = {{ wireguard_port }}
+PrivateKey = {{ wireguard_private_key }}
+
+{% for client in groups['vpn-servers'] %}
+{% if client != inventory_hostname %}
+# {{ client }}
+[Peer]
+PublicKey  = {{ hostvars[client]['wireguard_public_key'] }}
+AllowedIPs = {{ wireguard_allowed_ips }}
+Endpoint   = {{ hostvars[client]['public_ip'] }}:{{ wireguard_port }}
+
+{% endif %}
+{% endfor %}

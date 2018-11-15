@@ -1,0 +1,77 @@
+- hosts: all
+  #
+  # First we need to generate public and private keys for all servers
+  #
+  pre_tasks:
+
+    - name: Create /etc/wireguard directory
+      file:
+        path: "{{ wireguard_path }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0600
+
+    - name : Add WireGuard repository to Debian
+      apt_repository:
+        repo: deb http://deb.debian.org/debian/ unstable main
+        state: present
+        filename: unstable-wireguard.list
+        update_cache: yes
+      when: ansible_distribution == 'Debian'
+
+    - name: Configure APT to use unstable Debian repository with low priority
+      copy:
+        src: roles/wireguard/files/limit-unstable
+        dest: /etc/apt/preferences.d/limit-unstable
+      when: ansible_distribution == 'Debian'
+
+    - name: Add the WireGuard PPA
+      apt_repository:
+        repo: 'ppa:wireguard/wireguard'
+      when: ansible_distribution == 'Ubuntu'
+
+    - name: Install the WireGuard packages
+      apt:
+        package:
+          - wireguard-dkms
+          - wireguard-tools
+
+    #
+    # PRIVATE KEY
+    #
+    - name: Generate private key
+      shell: "wg genkey"
+      register: wireguard_private_key_shell
+      changed_when: False
+
+    - name: Store private key
+      set_fact:
+        wireguard_private_key: "{{ wireguard_private_key_shell.stdout }}"
+
+    - copy: content="{{ wireguard_private_key }}" dest="{{ wireguard_path}}/wg.key"
+
+    - name: Private key
+      debug:
+        msg: "{{ wireguard_private_key }}"
+
+    #
+    # PUBLIC KEY
+    #
+    - name: Generate public key
+      shell: "cat /etc/wireguard/wg.key | wg pubkey"
+      register: wireguard_public_key_shell
+      changed_when: False
+
+    - name: Store public key
+      set_fact:
+        wireguard_public_key: "{{ wireguard_public_key_shell.stdout }}"
+
+    - copy: content="{{ wireguard_public_key }}" dest="{{ wireguard_path}}/wg.pub"
+
+    - name: Public key
+      debug:
+        msg: "{{ wireguard_public_key }}"
+
+  roles:
+    - { role: wireguard, become: true, tags: ['wireguard'] }

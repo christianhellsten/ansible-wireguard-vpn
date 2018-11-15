@@ -1,6 +1,16 @@
 # ansible-wireguard-vpn
 
-Ansible + Wireguard = VPN
+Ansible + WireGuard = VPN
+
+## Introduction
+
+This Ansible playbook will set up a point-to-point VPN mesh network.
+
+Tested on Debian Stretch, but should also work on Ubuntu.
+
+Please submit a pull request if you find any issues or want to support other platforms.
+
+To customize installation, see roles/wireguard/vars/main.yml and roles/wireguard/defaults/main.yml.
 
 ## Prerequisites
 
@@ -64,4 +74,37 @@ peer: <check this>
   endpoint: 212.xxx
   allowed ips: 192.168.0.0/16
   transfer: 0 B received, 4.34 KiB sent
+```
+
+## WireGuard cheat sheet
+
+Show WireGuard configuration:
+
+```bash
+# wg
+```
+
+Stop/Start WireGuard:
+
+```bash
+wg-quick down wg0
+wg-quick up wg0
+```
+
+Start the WireGuard service:
+
+```bash
+# systemctl start wg-quick@wg0
+```
+
+Check WireGuard status:
+
+```bash
+# systemctl status wg-quick@wg0
+```
+
+Configure WireGuard to start up at boot:
+
+```bash
+# systemctl enable wg-quick@wg0
 ```
